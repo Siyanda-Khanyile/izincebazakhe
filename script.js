@@ -221,17 +221,23 @@ const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
 })();
 
 /* ──────────────────────────────────────────────
-   BOOKING FORM — mailto handler
+   BOOKING FORM — Netlify Forms submission
+   ─────────────────────────────────────────────
+   Form data is posted to Netlify's servers and
+   emailed to Ziningi automatically. No mail client
+   required — works for everyone.
    ────────────────────────────────────────────── */
 (function initBookingForm() {
-  const form        = document.getElementById('bookingForm');
-  const successBox  = document.getElementById('formSuccess');
+  const form       = document.getElementById('bookingForm');
+  const successBox = document.getElementById('formSuccess');
+  const submitBtn  = form ? form.querySelector('button[type="submit"]') : null;
   if (!form) return;
 
-  // Validate a single field
+  // ── Field validation ──────────────────────────
   const validate = (field) => {
     const val = field.value.trim();
     let error = '';
+
     if (field.required && !val) {
       error = 'This field is required.';
     } else if (field.type === 'email' && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
@@ -241,10 +247,9 @@ const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
       const minDate  = new Date();
       minDate.setHours(0, 0, 0, 0);
       minDate.setDate(minDate.getDate() + 7);
-      if (selected < minDate) error = 'Orders must be placed at least 7 days in advance.';
+      if (selected < minDate) error = 'Please select a date at least 7 days from today.';
     }
 
-    // Show/clear inline error
     let errEl = field.parentNode.querySelector('.field-error');
     if (error) {
       if (!errEl) {
@@ -263,76 +268,91 @@ const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
     }
   };
 
-  // Live validation on blur
+  // Live validation on blur / input
   form.querySelectorAll('input, select, textarea').forEach(field => {
-    field.addEventListener('blur', () => validate(field));
+    field.addEventListener('blur',  () => validate(field));
     field.addEventListener('input', () => {
-      const errEl = field.parentNode.querySelector('.field-error');
-      if (errEl) validate(field);
+      if (field.parentNode.querySelector('.field-error')) validate(field);
     });
   });
 
+  // ── Submit handler ────────────────────────────
   form.addEventListener('submit', (e) => {
     e.preventDefault();
 
-    // Run full validation
-    const fields  = Array.from(form.querySelectorAll('input[required], select[required]'));
-    const allValid = fields.every(f => validate(f));
+    // Validate all required fields first
+    const requiredFields = Array.from(form.querySelectorAll('input[required], select[required]'));
+    const allValid = requiredFields.every(f => validate(f));
     if (!allValid) {
       const firstErr = form.querySelector('.field-error');
       if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
 
-    // Collect values
-    const name     = document.getElementById('clientName').value.trim();
-    const email    = document.getElementById('clientEmail').value.trim();
-    const phone    = document.getElementById('clientPhone').value.trim();
-    const date     = document.getElementById('eventDate').value;
-    const type     = document.getElementById('eventType').value;
-    const guests   = document.getElementById('guestCount').value;
-    const message  = document.getElementById('specialRequests').value.trim();
+    // Loading state
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
 
-    // Format date nicely
-    const formattedDate = date
-      ? new Date(date + 'T00:00:00').toLocaleDateString('en-ZA', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
-      : 'Not specified';
+    // Submit to Netlify Forms via fetch
+    const formData = new FormData(form);
 
-    // Build email body
-    const subject = encodeURIComponent(`Booking Request — ${type} | ${formattedDate}`);
-    const body    = encodeURIComponent(
+    fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams(formData).toString()
+    })
+    .then(() => {
+      // Success — show confirmation
+      form.style.display = 'none';
+      successBox.classList.add('visible');
+      successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    })
+    .catch(() => {
+      // Fallback — if Netlify Forms fails, open mail client
+      const name    = document.getElementById('clientName').value.trim();
+      const email   = document.getElementById('clientEmail').value.trim();
+      const phone   = document.getElementById('clientPhone').value.trim();
+      const date    = document.getElementById('eventDate').value;
+      const type    = document.getElementById('eventType').value;
+      const guests  = document.getElementById('guestCount').value;
+      const message = document.getElementById('specialRequests').value.trim();
+
+      const formattedDate = date
+        ? new Date(date + 'T00:00:00').toLocaleDateString('en-ZA', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
+        : 'Not specified';
+
+      const subject = encodeURIComponent(`Booking Request — ${type} | ${formattedDate}`);
+      const body    = encodeURIComponent(
 `Hi Ziningi,
 
 I'd like to book your services. Here are my details:
 
-────────────────────────────
-  NAME:         ${name}
-  EMAIL:        ${email}
-  PHONE:        ${phone || 'Not provided'}
-  SERVICE:      ${type}
-  DATE:         ${formattedDate}
-  GUESTS:       ${guests || 'Not specified'}
-────────────────────────────
+  NAME:    ${name}
+  EMAIL:   ${email}
+  PHONE:   ${phone || 'Not provided'}
+  SERVICE: ${type}
+  DATE:    ${formattedDate}
+  GUESTS:  ${guests || 'Not specified'}
 
-MESSAGE / SPECIAL REQUESTS:
+MESSAGE:
 ${message || 'None'}
 
-Looking forward to hearing from you!
-
 Kind regards,
-${name}
-`
-    );
+${name}`
+      );
+      window.location.href = `mailto:${BOOKING_EMAIL}?subject=${subject}&body=${body}`;
 
-    // Open mail client
-    window.location.href = `mailto:${BOOKING_EMAIL}?subject=${subject}&body=${body}`;
-
-    // Show success state after short delay (time for mail client to open)
-    setTimeout(() => {
-      form.style.display = 'none';
-      successBox.classList.add('visible');
-      successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 800);
+      // Still show success after fallback
+      setTimeout(() => {
+        form.style.display = 'none';
+        successBox.classList.add('visible');
+        successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 800);
+    })
+    .finally(() => {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send Booking Request';
+    });
   });
 })();
 
