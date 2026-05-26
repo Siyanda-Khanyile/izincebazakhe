@@ -221,23 +221,17 @@ const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
 })();
 
 /* ──────────────────────────────────────────────
-   BOOKING FORM — Netlify Forms submission
-   ─────────────────────────────────────────────
-   Form data is posted to Netlify's servers and
-   emailed to Ziningi automatically. No mail client
-   required — works for everyone.
+   BOOKING FORM — mailto handler
    ────────────────────────────────────────────── */
 (function initBookingForm() {
   const form       = document.getElementById('bookingForm');
   const successBox = document.getElementById('formSuccess');
-  const submitBtn  = form ? form.querySelector('button[type="submit"]') : null;
   if (!form) return;
 
   // ── Field validation ──────────────────────────
   const validate = (field) => {
     const val = field.value.trim();
     let error = '';
-
     if (field.required && !val) {
       error = 'This field is required.';
     } else if (field.type === 'email' && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
@@ -249,7 +243,6 @@ const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
       minDate.setDate(minDate.getDate() + 7);
       if (selected < minDate) error = 'Please select a date at least 7 days from today.';
     }
-
     let errEl = field.parentNode.querySelector('.field-error');
     if (error) {
       if (!errEl) {
@@ -276,11 +269,10 @@ const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
     });
   });
 
-  // ── Submit handler ────────────────────────────
+  // ── Submit ────────────────────────────────────
   form.addEventListener('submit', (e) => {
     e.preventDefault();
 
-    // Validate all required fields first
     const requiredFields = Array.from(form.querySelectorAll('input[required], select[required]'));
     const allValid = requiredFields.every(f => validate(f));
     if (!allValid) {
@@ -289,40 +281,20 @@ const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
       return;
     }
 
-    // Loading state
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Sending…';
+    const name    = document.getElementById('clientName').value.trim();
+    const email   = document.getElementById('clientEmail').value.trim();
+    const phone   = document.getElementById('clientPhone').value.trim();
+    const date    = document.getElementById('eventDate').value;
+    const type    = document.getElementById('eventType').value;
+    const guests  = document.getElementById('guestCount').value;
+    const message = document.getElementById('specialRequests').value.trim();
 
-    // Submit to Netlify Forms via fetch
-    const formData = new FormData(form);
+    const formattedDate = date
+      ? new Date(date + 'T00:00:00').toLocaleDateString('en-ZA', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
+      : 'Not specified';
 
-    fetch('/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams(formData).toString()
-    })
-    .then(() => {
-      // Success — show confirmation
-      form.style.display = 'none';
-      successBox.classList.add('visible');
-      successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    })
-    .catch(() => {
-      // Fallback — if Netlify Forms fails, open mail client
-      const name    = document.getElementById('clientName').value.trim();
-      const email   = document.getElementById('clientEmail').value.trim();
-      const phone   = document.getElementById('clientPhone').value.trim();
-      const date    = document.getElementById('eventDate').value;
-      const type    = document.getElementById('eventType').value;
-      const guests  = document.getElementById('guestCount').value;
-      const message = document.getElementById('specialRequests').value.trim();
-
-      const formattedDate = date
-        ? new Date(date + 'T00:00:00').toLocaleDateString('en-ZA', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
-        : 'Not specified';
-
-      const subject = encodeURIComponent(`Booking Request — ${type} | ${formattedDate}`);
-      const body    = encodeURIComponent(
+    const subject = encodeURIComponent(`Booking Request — ${type} | ${formattedDate}`);
+    const body    = encodeURIComponent(
 `Hi Ziningi,
 
 I'd like to book your services. Here are my details:
@@ -334,25 +306,23 @@ I'd like to book your services. Here are my details:
   DATE:    ${formattedDate}
   GUESTS:  ${guests || 'Not specified'}
 
-MESSAGE:
+MESSAGE / SPECIAL REQUESTS:
 ${message || 'None'}
 
 Kind regards,
 ${name}`
-      );
-      window.location.href = `mailto:${BOOKING_EMAIL}?subject=${subject}&body=${body}`;
+    );
 
-      // Still show success after fallback
-      setTimeout(() => {
-        form.style.display = 'none';
-        successBox.classList.add('visible');
-        successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 800);
-    })
-    .finally(() => {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Send Booking Request';
-    });
+    // Open mail client with pre-filled email
+    window.location.href = `mailto:${BOOKING_EMAIL}?subject=${subject}&body=${body}`;
+
+    // Show success message — includes fallback email address
+    // in case the mail client doesn't open
+    setTimeout(() => {
+      form.style.display = 'none';
+      successBox.classList.add('visible');
+      successBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 600);
   });
 })();
 

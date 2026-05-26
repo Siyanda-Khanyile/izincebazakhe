@@ -470,10 +470,7 @@
       <div class="book-form-side reveal-right">
 
         <!-- The form (shown by default) -->
-        <form class="booking-form" id="bookingForm" name="booking" netlify netlify-honeypot="bot-field" novalidate>
-          <!-- Netlify Forms required hidden fields -->
-          <input type="hidden" name="form-name" value="booking">
-          <p style="display:none"><label>Don't fill this out: <input name="bot-field"></label></p>
+        <form class="booking-form" id="bookingForm" novalidate>
           <div class="form-row">
             <div class="form-group">
               <label for="clientName">Full Name <span style="color:var(--rose)">*</span></label>
@@ -538,9 +535,13 @@
         <!-- Success Message (hidden until form submitted) -->
         <div class="form-success" id="formSuccess" role="alert" aria-live="polite">
           <div class="success-icon">✓</div>
-          <h3>Request Sent!</h3>
-          <p>Thank you for reaching out. Your booking request has been sent — I'll get back to you within 24 hours to confirm everything. ♡</p>
-          <a href="#home" class="btn btn-outline">Back to Top</a>
+          <h3>Your email app should have opened!</h3>
+          <p>Please send the pre-filled email to complete your booking request. Ziningi will get back to you within 24 hours. ♡</p>
+          <p style="margin-top:1rem;font-size:0.9rem;opacity:0.8">
+            If nothing opened, email directly:<br>
+            <a href="mailto:bookings@izincebazakhe.com" style="color:var(--gold);font-weight:600">bookings@izincebazakhe.com</a>
+          </p>
+          <a href="#home" class="btn btn-outline" style="margin-top:1.5rem">Back to Top</a>
         </div>
 
       </div>
