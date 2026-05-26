@@ -1,0 +1,21 @@
+# ─────────────────────────────────────────────────────────────
+# Netlify Build Configuration — Izinceba Zakhe Website
+# ─────────────────────────────────────────────────────────────
+[build]
+  # Runs before publishing; generates gallery-manifest.json
+  command = "node generate-manifest.js"
+  # The folder Netlify serves (root of this repo)
+  publish = "."
+
+# Redirect HTTP → HTTPS
+[[redirects]]
+  from   = "http://izincebazakhe.com/*"
+  to     = "https://izincebazakhe.com/:splat"
+  status = 301
+  force  = true
+
+[[redirects]]
+  from   = "http://www.izincebazakhe.com/*"
+  to     = "https://izincebazakhe.com/:splat"
+  status = 301
+  force  = true

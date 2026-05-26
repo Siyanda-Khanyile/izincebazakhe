@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Claude AI workspace files
+.claude/
+
+# Netlify local state
+.netlify/
+
+# Generated at build time — not committed
+gallery-manifest.json
+
+# Original food photos in media files are duplicated in /gallery
+# Only senathi image.jpeg and videos remain needed there
+media files/WhatsApp Image*.jpeg
+media files/info.jpeg
+
+# Editor
+.vscode/
+*.swp
