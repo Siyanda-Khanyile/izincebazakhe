@@ -1,13 +1,8 @@
 /* =============================================
-   ZININGI IZINGCEBA ZAKHE — WEBSITE SCRIPT
-   =============================================
-
-   ⚠️  BOOKING EMAIL: Replace the address below
-   with Ziningi's actual business email address
-   before publishing the website.
+   ZININGI IZINCEBA ZAKHE — WEBSITE SCRIPT
    ============================================= */
 
-const BOOKING_EMAIL = 'bookings@ziningiizingcebazakhe.co.za';
+const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
 
 /* ──────────────────────────────────────────────
    NAVBAR: Solid background on scroll
