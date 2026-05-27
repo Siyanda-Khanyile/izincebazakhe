@@ -383,14 +383,3 @@ ${name}`
   window.addEventListener('scroll', onScroll, { passive: true });
 })();
 
-/* ──────────────────────────────────────────────
-   SET MIN DATE — orders must be placed at least
-   7 days before the event date
-   ────────────────────────────────────────────── */
-(function setMinDate() {
-  const dateInput = document.getElementById('eventDate');
-  if (!dateInput) return;
-  const minDate = new Date();
-  minDate.setDate(minDate.getDate() + 7);
-  dateInput.setAttribute('min', minDate.toISOString().split('T')[0]);
-})();
