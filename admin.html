@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Media Manager — Ziningi Izinceba Zakhe</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=Dancing+Script:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --gold:         #c9a14a;
+      --gold-light:   #e2c278;
+      --dark:         #0d0500;
+      --dark-mid:     #1a0a00;
+      --dark-surface: #231100;
+      --rose:         #c47a5a;
+      --cream:        #f5efe6;
+      --muted:        rgba(245,239,230,0.60);
+      --border:       rgba(201,161,74,0.18);
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--dark);
+      color: var(--cream);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .hidden { display: none !important; }
+
+    /* ─── LOGIN ─────────────────────────────────────────── */
+    .login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      background: radial-gradient(ellipse at 50% -10%, rgba(201,161,74,0.08) 0%, transparent 65%);
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--dark-mid);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 2.5rem 2rem;
+      text-align: center;
+    }
+
+    .brand-logo {
+      margin-bottom: 1.75rem;
+    }
+    .brand-logo em {
+      display: block;
+      font-family: 'Dancing Script', cursive;
+      font-size: 2.2rem;
+      color: var(--gold);
+      font-style: normal;
+      line-height: 1;
+    }
+    .brand-logo span {
+      font-family: 'Playfair Display', serif;
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .login-card h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.45rem;
+      font-weight: 600;
+      color: var(--cream);
+      margin-bottom: 0.4rem;
+    }
+
+    .login-card .subtitle {
+      font-size: 0.83rem;
+      color: var(--muted);
+      line-height: 1.55;
+      margin-bottom: 2rem;
+    }
+
+    .pw-input {
+      width: 100%;
+      padding: 0.9rem 1.1rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--cream);
+      font-size: 1rem;
+      font-family: 'Inter', sans-serif;
+      margin-bottom: 0.9rem;
+      transition: border-color 0.2s;
+    }
+    .pw-input:focus { outline: none; border-color: var(--gold); }
+    .pw-input::placeholder { color: var(--muted); }
+
+    .login-btn {
+      width: 100%;
+      padding: 0.92rem;
+      background: var(--gold);
+      color: var(--dark);
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      transition: background 0.2s;
+    }
+    .login-btn:hover:not(:disabled) { background: var(--gold-light); }
+    .login-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .login-error {
+      margin-top: 0.7rem;
+      color: var(--rose);
+      font-size: 0.82rem;
+    }
+
+    /* ─── DASHBOARD ─────────────────────────────────────── */
+    .admin-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.95rem 1.5rem;
+      background: var(--dark-mid);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-brand em {
+      font-family: 'Dancing Script', cursive;
+      font-size: 1.35rem;
+      color: var(--gold);
+      font-style: normal;
+    }
+    .header-brand .header-tag {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-left: 0.5rem;
+      letter-spacing: 0.05em;
+    }
+
+    .logout-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.45rem 1rem;
+      border-radius: 7px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .logout-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+    .admin-main {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 2.25rem 1.25rem 5rem;
+    }
+
+    .admin-main > h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.9rem;
+      color: var(--cream);
+      margin-bottom: 0.35rem;
+    }
+
+    .admin-main > .admin-sub {
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+      line-height: 1.5;
+    }
+
+    /* ─── Upload cards ───────────────────────────────────── */
+    .upload-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 500px) {
+      .upload-grid { grid-template-columns: 1fr; }
+    }
+
+    .upload-card {
+      background: var(--dark-mid);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.75rem 1.25rem 1.5rem;
+      text-align: center;
+      transition: border-color 0.25s, transform 0.15s;
+    }
+    .upload-card:hover { border-color: rgba(201,161,74,0.38); transform: translateY(-1px); }
+
+    .card-icon { font-size: 2.8rem; margin-bottom: 0.7rem; line-height: 1; }
+
+    .upload-card h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      color: var(--cream);
+      margin-bottom: 0.4rem;
+    }
+
+    .upload-card p {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 1.25rem;
+      line-height: 1.5;
+    }
+
+    .upload-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.7rem 1.4rem;
+      background: var(--gold);
+      color: var(--dark);
+      border: none;
+      border-radius: 9px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .upload-trigger:hover:not(:disabled) { background: var(--gold-light); }
+    .upload-trigger:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* ─── Tips ───────────────────────────────────────────── */
+    .tips-box {
+      background: rgba(201,161,74,0.05);
+      border: 1px solid rgba(201,161,74,0.12);
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .tips-box h4 {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.65rem;
+    }
+
+    .tips-box ul { list-style: none; }
+
+    .tips-box li {
+      font-size: 0.82rem;
+      color: var(--muted);
+      padding: 0.22rem 0 0.22rem 1.25rem;
+      position: relative;
+      line-height: 1.45;
+    }
+    .tips-box li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--gold);
+      font-size: 0.72rem;
+      top: 0.28rem;
+    }
+
+    /* ─── Stats ──────────────────────────────────────────── */
+    .stats-box {
+      background: var(--dark-surface);
+      border: 1px solid rgba(201,161,74,0.1);
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+    }
+
+    .stats-row {
+      display: flex;
+      justify-content: space-around;
+      text-align: center;
+      gap: 1rem;
+    }
+
+    .stat-num {
+      display: block;
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 0.3rem;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .stats-loading {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.83rem;
+      color: var(--muted);
+    }
+
+    /* ─── Toast ──────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 1.75rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(120px);
+      background: #0f2b10;
+      border: 1px solid rgba(76,175,80,0.5);
+      color: #a5d6a7;
+      padding: 0.85rem 1.5rem;
+      border-radius: 12px;
+      font-size: 0.88rem;
+      transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
+      z-index: 9999;
+      white-space: nowrap;
+      max-width: 90vw;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ─── Spinner ─────────────────────────────────────────── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(201,161,74,0.2);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     LOGIN SCREEN
+     ═══════════════════════════════════════ -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="brand-logo">
+      <em>Ziningi</em>
+      <span>Izinceba Zakhe</span>
+    </div>
+    <h1>Media Manager</h1>
+    <p class="subtitle">Upload your food photos and kitchen videos here — they appear on the website automatically.</p>
+
+    <form id="loginForm" autocomplete="off">
+      <input
+        type="password"
+        id="passwordInput"
+        class="pw-input"
+        placeholder="Enter your password"
+        required
+        autocomplete="current-password"
+      >
+      <button type="submit" class="login-btn" id="loginBtn">Sign In</button>
+      <p id="loginError" class="login-error hidden"></p>
+    </form>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     DASHBOARD
+     ═══════════════════════════════════════ -->
+<div id="dashboard" class="hidden">
+
+  <header class="admin-header">
+    <div class="header-brand">
+      <em>Ziningi</em>
+      <span class="header-tag">Media Manager</span>
+    </div>
+    <button class="logout-btn" id="logoutBtn">Sign Out</button>
+  </header>
+
+  <main class="admin-main">
+    <h2>Upload New Media</h2>
+    <p class="admin-sub">Photos and videos appear on the website within seconds of uploading. You can upload multiple files at once.</p>
+
+    <div class="upload-grid">
+
+      <div class="upload-card">
+        <div class="card-icon">📸</div>
+        <h3>Food Photos</h3>
+        <p>Dishes, platings, event setups — everything you'd like to show in the gallery</p>
+        <button class="upload-trigger" id="uploadPhotosBtn" disabled>Upload Photos</button>
+      </div>
+
+      <div class="upload-card">
+        <div class="card-icon">🎥</div>
+        <h3>Kitchen Videos</h3>
+        <p>Behind-the-scenes clips, cooking reels, and event footage</p>
+        <button class="upload-trigger" id="uploadVideosBtn" disabled>Upload Videos</button>
+      </div>
+
+    </div>
+
+    <div class="tips-box">
+      <h4>Tips for best results</h4>
+      <ul>
+        <li>You can select and upload multiple files at once</li>
+        <li>iPhone photos (HEIC) and WhatsApp photos are both supported</li>
+        <li>Good natural lighting makes food photos look their best</li>
+        <li>Videos up to 200 MB are supported</li>
+        <li>New uploads appear on the website within seconds — no waiting</li>
+      </ul>
+    </div>
+
+    <div class="stats-box" id="statsBox">
+      <div class="stats-loading">
+        <span class="spinner"></span>
+        <span>Loading your gallery stats…</span>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+
+<!-- Cloudinary Upload Widget SDK -->
+<script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  const SESSION_KEY = 'izinceba_admin_v1';
+
+  // ── DOM ──────────────────────────────────────────────────
+  const loginScreen     = document.getElementById('loginScreen');
+  const dashboard       = document.getElementById('dashboard');
+  const loginForm       = document.getElementById('loginForm');
+  const loginBtn        = document.getElementById('loginBtn');
+  const loginError      = document.getElementById('loginError');
+  const passwordInput   = document.getElementById('passwordInput');
+  const logoutBtn       = document.getElementById('logoutBtn');
+  const uploadPhotosBtn = document.getElementById('uploadPhotosBtn');
+  const uploadVideosBtn = document.getElementById('uploadVideosBtn');
+  const statsBox        = document.getElementById('statsBox');
+  const toastEl         = document.getElementById('toast');
+
+  // ── Toast ────────────────────────────────────────────────
+  let toastTimer;
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 4000);
+  }
+
+  // ── Auth ─────────────────────────────────────────────────
+  async function login(password) {
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Signing in…';
+    loginError.classList.add('hidden');
+
+    try {
+      const res  = await fetch('/.netlify/functions/auth', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ password }),
+      });
+      const data = await res.json();
+
+      if (data.ok) {
+        sessionStorage.setItem(SESSION_KEY, '1');
+        enterDashboard();
+      } else {
+        showLoginError('Incorrect password. Please try again.');
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Sign In';
+        passwordInput.value = '';
+        passwordInput.focus();
+      }
+    } catch {
+      showLoginError('Connection error — please check your internet and try again.');
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Sign In';
+    }
+  }
+
+  function showLoginError(msg) {
+    loginError.textContent = msg;
+    loginError.classList.remove('hidden');
+  }
+
+  function logout() {
+    sessionStorage.removeItem(SESSION_KEY);
+    dashboard.classList.add('hidden');
+    loginScreen.classList.remove('hidden');
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Sign In';
+    loginError.classList.add('hidden');
+    passwordInput.value = '';
+    passwordInput.focus();
+  }
+
+  // ── Cloudinary widgets ───────────────────────────────────
+  let cloudConfig  = null;
+  let photoWidget  = null;
+  let videoWidget  = null;
+
+  function buildWidget(resourceType) {
+    if (!cloudConfig || !cloudConfig.cloudName) return null;
+
+    return cloudinary.createUploadWidget(
+      {
+        cloudName:    cloudConfig.cloudName,
+        uploadPreset: cloudConfig.uploadPreset,
+        folder:       'izinceba',
+        resourceType,
+        sources:      ['local', 'camera'],
+        multiple:     true,
+        maxFileSize:  200_000_000,
+        clientAllowedFormats: resourceType === 'image'
+          ? ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif']
+          : ['mp4', 'mov', 'avi', 'quicktime', 'webm'],
+        showPoweredBy:       false,
+        showAdvancedOptions: false,
+        cropping:            false,
+        styles: {
+          palette: {
+            window:          '#1a0a00',
+            sourceBg:        '#231100',
+            windowBorder:    '#c9a14a',
+            tabIcon:         '#c9a14a',
+            inactiveTabIcon: '#7a5a20',
+            menuIcons:       '#c9a14a',
+            link:            '#c9a14a',
+            action:          '#c9a14a',
+            inProgress:      '#c9a14a',
+            complete:        '#4caf50',
+            error:           '#e53935',
+            textDark:        '#0d0500',
+            textLight:       '#f5efe6',
+          },
+        },
+      },
+      (error, result) => {
+        if (error) {
+          showToast('Upload failed — please try again.');
+          return;
+        }
+        if (result.event === 'success') {
+          const label = resourceType === 'image' ? 'Photo' : 'Video';
+          showToast(`${label} uploaded — it\'s now live on the website!`);
+          loadStats();
+        }
+      }
+    );
+  }
+
+  // ── Dashboard ────────────────────────────────────────────
+  async function enterDashboard() {
+    loginScreen.classList.add('hidden');
+    dashboard.classList.remove('hidden');
+
+    try {
+      const res = await fetch('/.netlify/functions/config');
+      cloudConfig = await res.json();
+
+      if (cloudConfig.cloudName) {
+        photoWidget = buildWidget('image');
+        videoWidget = buildWidget('video');
+        uploadPhotosBtn.disabled = false;
+        uploadVideosBtn.disabled = false;
+      } else {
+        uploadPhotosBtn.title = 'Not configured yet — contact your website manager.';
+        uploadVideosBtn.title = 'Not configured yet — contact your website manager.';
+      }
+    } catch {
+      console.warn('Could not load Cloudinary config.');
+    }
+
+    loadStats();
+  }
+
+  function loadStats() {
+    statsBox.innerHTML = `<div class="stats-loading"><span class="spinner"></span><span>Loading…</span></div>`;
+
+    fetch('/.netlify/functions/gallery')
+      .then(r => r.ok ? r.json() : { images: [], videos: [] })
+      .then(({ images = [], videos = [] }) => {
+        statsBox.innerHTML = `
+          <div class="stats-row">
+            <div>
+              <span class="stat-num">${images.length}</span>
+              <span class="stat-label">Photos in gallery</span>
+            </div>
+            <div>
+              <span class="stat-num">${videos.length}</span>
+              <span class="stat-label">Videos uploaded</span>
+            </div>
+          </div>
+        `;
+      })
+      .catch(() => {
+        statsBox.innerHTML = `<p style="font-size:.83rem;color:var(--muted)">Stats unavailable right now.</p>`;
+      });
+  }
+
+  // ── Events ───────────────────────────────────────────────
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const pw = passwordInput.value.trim();
+    if (pw) login(pw);
+  });
+
+  logoutBtn.addEventListener('click', logout);
+
+  uploadPhotosBtn.addEventListener('click', () => { if (photoWidget) photoWidget.open(); });
+  uploadVideosBtn.addEventListener('click', () => { if (videoWidget) videoWidget.open(); });
+
+  // ── Init ─────────────────────────────────────────────────
+  if (sessionStorage.getItem(SESSION_KEY)) {
+    enterDashboard();
+  } else {
+    passwordInput.focus();
+  }
+})();
+</script>
+
+</body>
+</html>

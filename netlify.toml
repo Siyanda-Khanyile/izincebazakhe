@@ -2,10 +2,12 @@
 # Netlify Build Configuration — Izinceba Zakhe Website
 # ─────────────────────────────────────────────────────────────
 [build]
-  # Runs before publishing; generates gallery-manifest.json
   command = "node generate-manifest.js"
-  # The folder Netlify serves (root of this repo)
   publish = "."
+
+[functions]
+  directory      = "netlify/functions"
+  node_bundler   = "esbuild"
 
 # Redirect HTTP → HTTPS
 [[redirects]]

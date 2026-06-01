@@ -81,39 +81,41 @@ const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
 /* ──────────────────────────────────────────────
    DYNAMIC GALLERY + LIGHTBOX
    ─────────────────────────────────────────────
-   Gallery images are loaded from gallery-manifest.json,
-   which is generated at build time by generate-manifest.js.
-
-   To add new photos: just upload image files to the
-   /gallery folder on GitHub — no HTML editing needed.
+   Images are loaded from two sources merged together:
+     1. Cloudinary (new uploads via /admin)   — shown first
+     2. gallery-manifest.json (existing local files) — fallback
+   Videos are loaded from Cloudinary and prepended above
+   the existing hardcoded video section.
    ────────────────────────────────────────────── */
 (function initDynamicGallery() {
-  const grid        = document.getElementById('galleryGrid');
-  const loadingEl   = document.getElementById('galleryLoading');
-  const lightbox    = document.getElementById('lightbox');
-  const lbImg       = document.getElementById('lightboxImg');
-  const lbCaption   = document.getElementById('lightboxCaption');
-  const lbClose     = document.getElementById('lightboxClose');
-  const lbPrev      = document.getElementById('lightboxPrev');
-  const lbNext      = document.getElementById('lightboxNext');
+  const grid      = document.getElementById('galleryGrid');
+  const loadingEl = document.getElementById('galleryLoading');
+  const lightbox  = document.getElementById('lightbox');
+  const lbImg     = document.getElementById('lightboxImg');
+  const lbCaption = document.getElementById('lightboxCaption');
+  const lbClose   = document.getElementById('lightboxClose');
+  const lbPrev    = document.getElementById('lightboxPrev');
+  const lbNext    = document.getElementById('lightboxNext');
 
   if (!grid || !lightbox) return;
 
+  const PAGE_SIZE  = 20;
+  let allImages    = [];
+  let renderedCount = 0;
   let galleryItems = [];
   let currentIndex = 0;
 
-  // ── Lightbox controls ──────────────────────────
+  // ── Lightbox ───────────────────────────────────
   const openLightbox = (index) => {
     currentIndex = index;
     const item    = galleryItems[index];
     const src     = item.getAttribute('data-src');
     const caption = item.getAttribute('data-caption') || '';
-    lbImg.src            = src;
-    lbImg.alt            = caption;
-    lbCaption.innerHTML  = caption;
+    lbImg.src           = src;
+    lbImg.alt           = caption;
+    lbCaption.innerHTML = caption;
     lightbox.classList.add('open');
     document.body.style.overflow = 'hidden';
-    lbImg.focus?.();
   };
 
   const closeLightbox = () => {
@@ -133,12 +135,10 @@ const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
   };
 
   lbClose.addEventListener('click', closeLightbox);
-  lbPrev.addEventListener('click', prevImage);
-  lbNext.addEventListener('click', nextImage);
+  lbPrev.addEventListener('click',  prevImage);
+  lbNext.addEventListener('click',  nextImage);
 
-  lightbox.addEventListener('click', e => {
-    if (e.target === lightbox) closeLightbox();
-  });
+  lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
 
   document.addEventListener('keydown', e => {
     if (!lightbox.classList.contains('open')) return;
@@ -154,7 +154,7 @@ const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
     if (Math.abs(diff) > 50) diff > 0 ? nextImage() : prevImage();
   });
 
-  // ── Scroll-reveal observer (re-usable for dynamically added items) ──
+  // ── Scroll-reveal ──────────────────────────────
   const revealObserver = new IntersectionObserver(
     entries => entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -165,18 +165,18 @@ const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
     { threshold: 0.1, rootMargin: '0px 0px -30px 0px' }
   );
 
-  // ── Build gallery item DOM from manifest entry ──
-  const createItem = (entry, index) => {
+  // ── Build a gallery card ───────────────────────
+  const createItem = (entry, globalIndex) => {
     const div = document.createElement('div');
     div.className = 'gallery-item reveal-up';
-    div.setAttribute('data-index',   index);
+    div.setAttribute('data-index',   globalIndex);
     div.setAttribute('data-src',     entry.src);
-    div.setAttribute('data-caption', entry.caption);
+    div.setAttribute('data-caption', entry.caption || 'Culinary Creation');
     div.setAttribute('tabindex',     '0');
 
-    const img = document.createElement('img');
-    img.src     = entry.src;
-    img.alt     = entry.alt || entry.caption;
+    const img  = document.createElement('img');
+    img.src     = entry.thumb || entry.src;
+    img.alt     = entry.caption || 'A dish prepared by Ziningi';
     img.loading = 'lazy';
 
     const overlay = document.createElement('div');
@@ -186,38 +186,105 @@ const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
     div.appendChild(img);
     div.appendChild(overlay);
 
-    div.addEventListener('click', () => openLightbox(index));
-    div.addEventListener('keydown', e => { if (e.key === 'Enter') openLightbox(index); });
+    div.addEventListener('click',   () => openLightbox(globalIndex));
+    div.addEventListener('keydown', e => { if (e.key === 'Enter') openLightbox(globalIndex); });
 
     revealObserver.observe(div);
     return div;
   };
 
-  // ── Fetch manifest and render gallery ──────────
-  fetch('gallery-manifest.json')
-    .then(res => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
-    })
-    .then(manifest => {
-      if (loadingEl) loadingEl.remove();
+  // ── Render next page of images ─────────────────
+  const renderPage = () => {
+    const batch = allImages.slice(renderedCount, renderedCount + PAGE_SIZE);
+    if (!batch.length) return;
 
-      if (!manifest.length) {
-        grid.innerHTML = '<p style="text-align:center;color:var(--gold);padding:2rem">No images in the gallery yet.</p>';
-        return;
-      }
+    const fragment = document.createDocumentFragment();
+    batch.forEach((entry, i) => fragment.appendChild(createItem(entry, renderedCount + i)));
+    grid.appendChild(fragment);
+    renderedCount += batch.length;
 
-      const fragment = document.createDocumentFragment();
-      manifest.forEach((entry, i) => fragment.appendChild(createItem(entry, i)));
-      grid.appendChild(fragment);
+    galleryItems = Array.from(grid.querySelectorAll('.gallery-item'));
 
-      // Make live NodeList for lightbox navigation
-      galleryItems = Array.from(grid.querySelectorAll('.gallery-item'));
-    })
-    .catch(err => {
-      console.warn('Gallery manifest not found — gallery hidden.', err);
-      if (loadingEl) loadingEl.remove();
+    // Show or hide "Load more" button
+    const btn = document.getElementById('galleryLoadMore');
+    if (btn) btn.style.display = renderedCount >= allImages.length ? 'none' : 'block';
+  };
+
+  // ── "Load more" button ─────────────────────────
+  const addLoadMoreBtn = () => {
+    if (document.getElementById('galleryLoadMore')) return;
+    const btn = document.createElement('button');
+    btn.id        = 'galleryLoadMore';
+    btn.textContent = 'Load more';
+    btn.style.cssText = [
+      'display:block', 'margin:2rem auto 0', 'padding:0.75rem 2.5rem',
+      'background:transparent', 'border:1px solid var(--gold)', 'color:var(--gold)',
+      'border-radius:9px', 'font-size:0.88rem', 'font-family:Inter,sans-serif',
+      'cursor:pointer', 'letter-spacing:0.04em', 'transition:background .2s,color .2s',
+    ].join(';');
+    btn.addEventListener('mouseenter', () => { btn.style.background = 'var(--gold)'; btn.style.color = 'var(--dark)'; });
+    btn.addEventListener('mouseleave', () => { btn.style.background = 'transparent'; btn.style.color = 'var(--gold)'; });
+    btn.addEventListener('click', renderPage);
+    grid.insertAdjacentElement('afterend', btn);
+  };
+
+  // ── Fetch both sources and merge ───────────────
+  Promise.allSettled([
+    fetch('/.netlify/functions/gallery').then(r => r.ok ? r.json() : { images: [] }),
+    fetch('gallery-manifest.json').then(r => r.ok ? r.json() : []),
+  ]).then(([cloudRes, manifestRes]) => {
+    if (loadingEl) loadingEl.remove();
+
+    const cloudImages    = cloudRes.status    === 'fulfilled' ? (cloudRes.value.images    || []) : [];
+    const manifestImages = manifestRes.status === 'fulfilled' ? (manifestRes.value || []) : [];
+    const cloudVideos    = cloudRes.status    === 'fulfilled' ? (cloudRes.value.videos    || []) : [];
+
+    // Merge: Cloudinary photos (newest) first, then existing local photos
+    allImages = [...cloudImages, ...manifestImages];
+
+    if (!allImages.length) {
+      grid.innerHTML = '<p style="text-align:center;color:var(--gold);padding:2rem">No images in the gallery yet.</p>';
+      return;
+    }
+
+    addLoadMoreBtn();
+    renderPage();
+
+    // Prepend any Cloudinary videos to the videos section
+    if (cloudVideos.length) renderCloudinaryVideos(cloudVideos);
+  });
+
+  // ── Cloudinary videos → prepend to section ─────
+  function renderCloudinaryVideos(videos) {
+    const videosGrid = document.querySelector('#videos .videos-grid');
+    if (!videosGrid) return;
+
+    const fragment = document.createDocumentFragment();
+    videos.forEach((v, i) => {
+      const card = document.createElement('div');
+      card.className = 'video-card reveal-up';
+
+      const video = document.createElement('video');
+      video.className = 'video-player';
+      video.controls  = true;
+      video.preload   = 'none';
+      video.setAttribute('aria-label', `Kitchen video ${i + 1}`);
+      if (v.poster) video.poster = v.poster;
+
+      const source  = document.createElement('source');
+      source.src    = v.src;
+      source.type   = 'video/mp4';
+
+      video.appendChild(source);
+      card.appendChild(video);
+      fragment.appendChild(card);
     });
+
+    videosGrid.prepend(fragment);
+
+    // Trigger scroll-reveal for newly added cards
+    fragment.querySelectorAll?.('.video-card') || videosGrid.querySelectorAll('.video-card.reveal-up:not(.visible)');
+  }
 })();
 
 /* ──────────────────────────────────────────────
