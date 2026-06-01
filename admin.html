@@ -563,7 +563,7 @@
         if (result.event === 'success') {
           const label = resourceType === 'image' ? 'Photo' : 'Video';
           showToast(`${label} uploaded — it\'s now live on the website!`);
-          loadStats();
+          setTimeout(() => loadStats(), 2500);
         }
       }
     );

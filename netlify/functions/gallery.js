@@ -29,29 +29,35 @@ exports.handler = async () => {
     poster: `https://res.cloudinary.com/${cloudName}/video/upload/f_jpg,so_1/${r.public_id}.jpg`,
   });
 
+  const byDateDesc = (a, b) => new Date(b.created_at) - new Date(a.created_at);
+
   try {
     const [imagesRes, videosRes] = await Promise.all([
-      cloudinary.search
-        .expression('folder:izinceba AND resource_type:image')
-        .sort_by('created_at', 'desc')
-        .max_results(200)
-        .execute(),
-      cloudinary.search
-        .expression('folder:izinceba AND resource_type:video')
-        .sort_by('created_at', 'desc')
-        .max_results(50)
-        .execute(),
+      cloudinary.api.resources({
+        type:          'upload',
+        prefix:        'izinceba/',
+        resource_type: 'image',
+        max_results:   200,
+        direction:     'desc',
+      }),
+      cloudinary.api.resources({
+        type:          'upload',
+        prefix:        'izinceba/',
+        resource_type: 'video',
+        max_results:   50,
+        direction:     'desc',
+      }),
     ]);
 
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=60',
+        'Cache-Control': 'public, max-age=15',
       },
       body: JSON.stringify({
-        images: imagesRes.resources.map(toImage),
-        videos: videosRes.resources.map(toVideo),
+        images: imagesRes.resources.sort(byDateDesc).map(toImage),
+        videos: videosRes.resources.sort(byDateDesc).map(toVideo),
       }),
     };
   } catch (err) {
