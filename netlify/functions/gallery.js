@@ -37,14 +37,12 @@ exports.handler = async () => {
     const [imagesRes, videosRes] = await Promise.all([
       cloudinary.api.resources({
         type:          'upload',
-        prefix:        'izinceba/',
         resource_type: 'image',
         max_results:   200,
         direction:     'desc',
       }),
       cloudinary.api.resources({
         type:          'upload',
-        prefix:        'izinceba/',
         resource_type: 'video',
         max_results:   50,
         direction:     'desc',
