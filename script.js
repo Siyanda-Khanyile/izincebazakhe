@@ -239,8 +239,8 @@ const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
     const manifestImages = manifestRes.status === 'fulfilled' ? (manifestRes.value || []) : [];
     const cloudVideos    = cloudRes.status    === 'fulfilled' ? (cloudRes.value.videos    || []) : [];
 
-    // Merge: Cloudinary photos (newest) first, then existing local photos
-    allImages = [...cloudImages, ...manifestImages];
+    // Use Cloudinary photos if available, otherwise fall back to local manifest — never mix both
+    allImages = cloudImages.length > 0 ? cloudImages : manifestImages;
 
     if (!allImages.length) {
       grid.innerHTML = '<p style="text-align:center;color:var(--gold);padding:2rem">No images in the gallery yet.</p>';
@@ -254,7 +254,7 @@ const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
     renderAllVideos(cloudVideos);
   });
 
-  // ── All videos merged and sorted by date ───────
+  // ── Local fallback videos (used only when Cloudinary has none) ─
   const LEGACY_VIDEOS = [
     { src: 'media%20files/WhatsApp%20Video%202026-05-23%20at%2022.49.16.mp4', date: '2026-05-23T22:49:16' },
     { src: 'media%20files/WhatsApp%20Video%202026-05-23%20at%2022.48.55.mp4', date: '2026-05-23T22:48:55' },
@@ -272,7 +272,8 @@ const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
     if (!videosGrid) return;
     if (videosLoading) videosLoading.remove();
 
-    const allVideos = [...cloudVideos, ...LEGACY_VIDEOS]
+    // Use Cloudinary videos if available, otherwise fall back to local — never mix both
+    const allVideos = (cloudVideos.length > 0 ? cloudVideos : LEGACY_VIDEOS)
       .sort((a, b) => new Date(b.date) - new Date(a.date));
 
     if (!allVideos.length) return;
