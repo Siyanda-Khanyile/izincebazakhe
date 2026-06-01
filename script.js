@@ -239,8 +239,8 @@ const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
     const manifestImages = manifestRes.status === 'fulfilled' ? (manifestRes.value || []) : [];
     const cloudVideos    = cloudRes.status    === 'fulfilled' ? (cloudRes.value.videos    || []) : [];
 
-    // Use Cloudinary photos if available, otherwise fall back to local manifest — never mix both
-    allImages = cloudImages.length > 0 ? cloudImages : manifestImages;
+    // Always merge: new Cloudinary photos first (newest), then existing local photos
+    allImages = [...cloudImages, ...manifestImages];
 
     if (!allImages.length) {
       grid.innerHTML = '<p style="text-align:center;color:var(--gold);padding:2rem">No images in the gallery yet.</p>';
