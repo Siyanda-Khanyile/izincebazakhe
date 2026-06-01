@@ -272,8 +272,8 @@ const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
     if (!videosGrid) return;
     if (videosLoading) videosLoading.remove();
 
-    // Use Cloudinary videos if available, otherwise fall back to local — never mix both
-    const allVideos = (cloudVideos.length > 0 ? cloudVideos : LEGACY_VIDEOS)
+    // Always merge Cloudinary + local legacy videos, sorted newest first
+    const allVideos = [...cloudVideos, ...LEGACY_VIDEOS]
       .sort((a, b) => new Date(b.date) - new Date(a.date));
 
     if (!allVideos.length) return;
