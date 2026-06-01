@@ -250,17 +250,35 @@ const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
     addLoadMoreBtn();
     renderPage();
 
-    // Prepend any Cloudinary videos to the videos section
-    if (cloudVideos.length) renderCloudinaryVideos(cloudVideos);
+    // Render all videos (Cloudinary + legacy) sorted newest first
+    renderAllVideos(cloudVideos);
   });
 
-  // ── Cloudinary videos → prepend to section ─────
-  function renderCloudinaryVideos(videos) {
-    const videosGrid = document.querySelector('#videos .videos-grid');
+  // ── All videos merged and sorted by date ───────
+  const LEGACY_VIDEOS = [
+    { src: 'media%20files/WhatsApp%20Video%202026-05-23%20at%2022.49.16.mp4', date: '2026-05-23T22:49:16' },
+    { src: 'media%20files/WhatsApp%20Video%202026-05-23%20at%2022.48.55.mp4', date: '2026-05-23T22:48:55' },
+    { src: 'media%20files/WhatsApp%20Video%202026-05-23%20at%2022.48.44.mp4', date: '2026-05-23T22:48:44' },
+    { src: 'media%20files/WhatsApp%20Video%202026-05-23%20at%2022.48.25.mp4', date: '2026-05-23T22:48:25' },
+    { src: 'media%20files/WhatsApp%20Video%202026-05-23%20at%2022.48.18.mp4', date: '2026-05-23T22:48:18' },
+    { src: 'media%20files/WhatsApp%20Video%202026-05-23%20at%2022.48.03.mp4', date: '2026-05-23T22:48:03' },
+    { src: 'media%20files/WhatsApp%20Video%202026-05-23%20at%2022.47.47.mp4', date: '2026-05-23T22:47:47' },
+    { src: 'media%20files/WhatsApp%20Video%202026-05-23%20at%2022.47.13.mp4', date: '2026-05-23T22:47:13' },
+  ];
+
+  function renderAllVideos(cloudVideos) {
+    const videosGrid    = document.getElementById('videosGrid');
+    const videosLoading = document.getElementById('videosLoading');
     if (!videosGrid) return;
+    if (videosLoading) videosLoading.remove();
+
+    const allVideos = [...cloudVideos, ...LEGACY_VIDEOS]
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    if (!allVideos.length) return;
 
     const fragment = document.createDocumentFragment();
-    videos.forEach((v, i) => {
+    allVideos.forEach((v, i) => {
       const card = document.createElement('div');
       card.className = 'video-card reveal-up';
 
@@ -271,19 +289,17 @@ const BOOKING_EMAIL = 'bookings@izincebazakhe.com';
       video.setAttribute('aria-label', `Kitchen video ${i + 1}`);
       if (v.poster) video.poster = v.poster;
 
-      const source  = document.createElement('source');
-      source.src    = v.src;
-      source.type   = 'video/mp4';
+      const source = document.createElement('source');
+      source.src   = v.src;
+      source.type  = 'video/mp4';
 
       video.appendChild(source);
       card.appendChild(video);
       fragment.appendChild(card);
+      revealObserver.observe(card);
     });
 
-    videosGrid.prepend(fragment);
-
-    // Trigger scroll-reveal for newly added cards
-    fragment.querySelectorAll?.('.video-card') || videosGrid.querySelectorAll('.video-card.reveal-up:not(.visible)');
+    videosGrid.appendChild(fragment);
   }
 })();
 

@@ -22,11 +22,13 @@ exports.handler = async () => {
     src:     `https://res.cloudinary.com/${cloudName}/image/upload/q_auto,f_auto/${r.public_id}`,
     thumb:   `https://res.cloudinary.com/${cloudName}/image/upload/c_fill,w_600,h_600,q_auto,f_auto/${r.public_id}`,
     caption: 'Culinary Creation',
+    date:    r.created_at,
   });
 
   const toVideo = (r) => ({
     src:    `https://res.cloudinary.com/${cloudName}/video/upload/q_auto/${r.public_id}`,
     poster: `https://res.cloudinary.com/${cloudName}/video/upload/f_jpg,so_1/${r.public_id}.jpg`,
+    date:   r.created_at,
   });
 
   const byDateDesc = (a, b) => new Date(b.created_at) - new Date(a.created_at);
