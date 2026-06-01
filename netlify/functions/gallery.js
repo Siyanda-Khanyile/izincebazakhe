@@ -31,22 +31,18 @@ exports.handler = async () => {
     date:   r.created_at,
   });
 
-  const byDateDesc = (a, b) => new Date(b.created_at) - new Date(a.created_at);
-
   try {
     const [imagesRes, videosRes] = await Promise.all([
-      cloudinary.api.resources({
-        type:          'upload',
-        resource_type: 'image',
-        max_results:   200,
-        direction:     'desc',
-      }),
-      cloudinary.api.resources({
-        type:          'upload',
-        resource_type: 'video',
-        max_results:   50,
-        direction:     'desc',
-      }),
+      cloudinary.search
+        .expression('asset_folder:izinceba AND resource_type:image')
+        .sort_by('created_at', 'desc')
+        .max_results(200)
+        .execute(),
+      cloudinary.search
+        .expression('asset_folder:izinceba AND resource_type:video')
+        .sort_by('created_at', 'desc')
+        .max_results(50)
+        .execute(),
     ]);
 
     return {
@@ -56,8 +52,8 @@ exports.handler = async () => {
         'Cache-Control': 'public, max-age=15',
       },
       body: JSON.stringify({
-        images: imagesRes.resources.sort(byDateDesc).map(toImage),
-        videos: videosRes.resources.sort(byDateDesc).map(toVideo),
+        images: imagesRes.resources.map(toImage),
+        videos: videosRes.resources.map(toVideo),
       }),
     };
   } catch (err) {
